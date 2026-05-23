@@ -1,0 +1,12 @@
+requirements.txt
+venv/
+studyflow.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+    
