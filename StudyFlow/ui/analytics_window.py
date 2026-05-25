@@ -6,6 +6,7 @@ import io
 import threading
 
 from ui.theme import *
+from ui.widgets import create_cat_button, CAT_BG_ANALYTICS
 from models.session import StudySession
 from analytics.engine import (
     compute_daily_stats,
@@ -37,13 +38,34 @@ class AnalyticsWindow(ctk.CTkToplevel):
         self._build()
 
     def _build(self):
+        self._bg_photo = None
         canvas = tk.Canvas(self, bg=BG_MID, highlightthickness=0)
         scrollbar = ctk.CTkScrollbar(self, command=canvas.yview)
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        self.scroll_frame = ctk.CTkFrame(canvas, fg_color=BG_MID)
+        def _draw_window_bg(event=None):
+            w = self.winfo_width()
+            h = self.winfo_height()
+            if w < 4 or h < 4:
+                return
+            try:
+                base = Image.open(CAT_BG_ANALYTICS).convert("RGBA")
+                base = base.resize((w, h), Image.Resampling.LANCZOS)
+                overlay = Image.new("RGBA", (w, h), (255, 200, 220, 145))
+                img = Image.alpha_composite(base, overlay)
+                self._bg_photo = ImageTk.PhotoImage(img)
+                canvas.delete("bg")
+                canvas.create_image(0, 0, anchor="nw", image=self._bg_photo, tags="bg")
+                canvas.tag_lower("bg")
+            except OSError:
+                pass
+
+        self.bind("<Configure>", _draw_window_bg)
+        self.after(80, _draw_window_bg)
+
+        self.scroll_frame = ctk.CTkFrame(canvas, fg_color="transparent")
         self.scroll_frame.bind(
             "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
@@ -260,41 +282,40 @@ class AnalyticsWindow(ctk.CTkToplevel):
         export_frame = ctk.CTkFrame(f, fg_color="transparent")
         export_frame.pack(fill="x", padx=PAD, pady=(8, PAD))
 
-        ctk.CTkButton(
+        create_cat_button(
             export_frame,
-            text="\U0001f4c4 Export PDF Report",
-            fg_color=ACCENT2,
-            hover_color=BTN_END[1],
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
-            height=40,
-            corner_radius=BTN_RADIUS,
+            "\U0001f4c4 Export PDF Report",
+            BTN_EXPORT_PDF[0],
+            BTN_EXPORT_PDF[1],
             command=self._export_pdf,
-        ).pack(side="left", padx=(0, 8))
-
-        ctk.CTkButton(
-            export_frame,
-            text="\U0001f4ca Export Excel Report",
-            fg_color=ACCENT3,
-            hover_color="#9B1B5E",
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
             height=40,
-            corner_radius=BTN_RADIUS,
+            font_size=12,
+            pack_kwargs={"side": "left", "padx": (0, 8)},
+        )
+
+        create_cat_button(
+            export_frame,
+            "\U0001f4ca Export Excel Report",
+            BTN_EXPORT_XLS[0],
+            BTN_EXPORT_XLS[1],
             command=self._export_excel,
-        ).pack(side="left")
-
-        ctk.CTkButton(
-            export_frame,
-            text="\u2715 Close",
-            fg_color=SURFACE,
-            hover_color=CARD_BORDER,
-            text_color=TEXT_PRIMARY,
-            font=ctk.CTkFont(family="Segoe UI", size=12),
             height=40,
-            corner_radius=BTN_RADIUS,
+            font_size=12,
+            pack_kwargs={"side": "left"},
+        )
+
+        create_cat_button(
+            export_frame,
+            "\u2715 Close",
+            BTN_SECONDARY[0],
+            BTN_SECONDARY[1],
             command=self.destroy,
-        ).pack(side="right")
+            text_color=TEXT_PRIMARY,
+            height=40,
+            font_size=12,
+            bold=False,
+            pack_kwargs={"side": "right"},
+        )
 
         threading.Thread(target=self._load_charts, daemon=True).start()
 

@@ -7,6 +7,12 @@ import time
 from PIL import Image, ImageTk
 
 from ui.theme import *
+from ui.widgets import (
+    create_cat_button,
+    setup_cat_panel_background,
+    CAT_BG_TODAY,
+    CAT_BG_ANALYTICS,
+)
 from ui.session_card import SessionCard
 from ui.analytics_window import AnalyticsWindow
 from database.db_manager import DatabaseManager
@@ -142,58 +148,43 @@ class StudyFlowApp(ctk.CTk):
         btn_grid = ctk.CTkFrame(left, fg_color="transparent")
         btn_grid.pack(fill="x", padx=24)
 
-        self.start_btn = ctk.CTkButton(
+        self.start_btn = create_cat_button(
             btn_grid,
-            text="\u25b6  Start",
-            fg_color=BTN_START[0],
-            hover_color=BTN_START[1],
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
-            height=BTN_HEIGHT,
-            corner_radius=BTN_RADIUS,
+            "\u25b6  Start",
+            BTN_START[0],
+            BTN_START[1],
             command=self._on_start,
+            grid_kwargs={"row": 0, "column": 0, "padx": (0, 6), "pady": 6, "sticky": "ew"},
         )
-        self.start_btn.grid(row=0, column=0, padx=(0, 6), pady=6, sticky="ew")
 
-        self.pause_btn = ctk.CTkButton(
+        self.pause_btn = create_cat_button(
             btn_grid,
-            text="\u23f8  Pause",
-            fg_color=BTN_PAUSE[0],
-            hover_color=BTN_PAUSE[1],
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
-            height=BTN_HEIGHT,
-            corner_radius=BTN_RADIUS,
+            "\u23f8  Pause",
+            BTN_PAUSE[0],
+            BTN_PAUSE[1],
             command=self._on_pause,
             state="disabled",
+            grid_kwargs={"row": 0, "column": 1, "padx": (6, 0), "pady": 6, "sticky": "ew"},
         )
-        self.pause_btn.grid(row=0, column=1, padx=(6, 0), pady=6, sticky="ew")
 
-        self.reset_btn = ctk.CTkButton(
+        self.reset_btn = create_cat_button(
             btn_grid,
-            text="\U0001f504  Reset",
-            fg_color=BTN_RESET[0],
-            hover_color=BTN_RESET[1],
-            text_color=TEXT_PRIMARY,
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
-            height=BTN_HEIGHT,
-            corner_radius=BTN_RADIUS,
+            "\U0001f504  Reset",
+            BTN_RESET[0],
+            BTN_RESET[1],
             command=self._on_reset,
+            text_color=TEXT_PRIMARY,
+            grid_kwargs={"row": 1, "column": 0, "padx": (0, 6), "pady": 6, "sticky": "ew"},
         )
-        self.reset_btn.grid(row=1, column=0, padx=(0, 6), pady=6, sticky="ew")
 
-        self.end_btn = ctk.CTkButton(
+        self.end_btn = create_cat_button(
             btn_grid,
-            text="\U0001f3c1  End Day",
-            fg_color=BTN_END[0],
-            hover_color=BTN_END[1],
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
-            height=BTN_HEIGHT,
-            corner_radius=BTN_RADIUS,
+            "\U0001f3c1  End Day",
+            BTN_END[0],
+            BTN_END[1],
             command=self._on_end_day,
+            grid_kwargs={"row": 1, "column": 1, "padx": (6, 0), "pady": 6, "sticky": "ew"},
         )
-        self.end_btn.grid(row=1, column=1, padx=(6, 0), pady=6, sticky="ew")
 
         btn_grid.columnconfigure(0, weight=1)
         btn_grid.columnconfigure(1, weight=1)
@@ -282,18 +273,17 @@ class StudyFlowApp(ctk.CTk):
             text_color=ACCENT1,
         ).pack(side="left", padx=20, pady=14)
 
-        self.history_btn = ctk.CTkButton(
+        self.history_btn = create_cat_button(
             hdr,
-            text="\U0001f4cb Session History",
-            fg_color=SURFACE,
-            hover_color=CARD_BORDER,
-            text_color=TEXT_PRIMARY,
-            font=ctk.CTkFont(family="Segoe UI", size=11),
-            height=32,
-            corner_radius=6,
+            "\U0001f4cb Session History",
+            BTN_SECONDARY[0],
+            BTN_SECONDARY[1],
             command=self._toggle_history,
+            text_color=TEXT_PRIMARY,
+            height=36,
+            font_size=11,
+            pack_kwargs={"side": "right", "padx": 20, "pady": 14},
         )
-        self.history_btn.pack(side="right", padx=20, pady=14)
 
         tab_row = ctk.CTkFrame(right, fg_color=BG_DARK, height=40, corner_radius=0)
         tab_row.grid(row=0, column=0, sticky="ew", pady=(56, 0))
@@ -302,12 +292,12 @@ class StudyFlowApp(ctk.CTk):
             right,
             fg_color=BG_MID,
             segmented_button_fg_color=BG_DARK,
-            segmented_button_selected_color=ACCENT1,
-            segmented_button_selected_hover_color=ACCENT2,
+            segmented_button_selected_color=TAB_SELECTED,
+            segmented_button_selected_hover_color=TAB_HOVER,
             segmented_button_unselected_color=BG_DARK,
-            segmented_button_unselected_hover_color=SURFACE,
+            segmented_button_unselected_hover_color=TAB_UNSELECTED,
             text_color=TEXT_PRIMARY,
-            corner_radius=0,
+            corner_radius=12,
         )
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 
@@ -322,12 +312,11 @@ class StudyFlowApp(ctk.CTk):
 
     def _build_today_tab(self):
         tab = self.tabview.tab("Today")
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(0, weight=1)
+        today_container = setup_cat_panel_background(tab, CAT_BG_TODAY)
 
         self.sessions_scroll = ctk.CTkScrollableFrame(
-            tab,
-            fg_color=BG_MID,
+            today_container,
+            fg_color="transparent",
             scrollbar_button_color=CARD_BORDER,
             scrollbar_button_hover_color=ACCENT1,
         )
@@ -366,12 +355,11 @@ class StudyFlowApp(ctk.CTk):
 
     def _build_analytics_tab(self):
         tab = self.tabview.tab("\u2728 Analytics")
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_rowconfigure(0, weight=1)
+        analytics_container = setup_cat_panel_background(tab, CAT_BG_ANALYTICS)
 
         self.analytics_scroll = ctk.CTkScrollableFrame(
-            tab,
-            fg_color=BG_MID,
+            analytics_container,
+            fg_color="transparent",
             scrollbar_button_color=CARD_BORDER,
             scrollbar_button_hover_color=ACCENT1,
         )
@@ -779,41 +767,40 @@ class StudyFlowApp(ctk.CTk):
         export_frame = ctk.CTkFrame(f, fg_color="transparent")
         export_frame.grid(row=7, column=0, sticky="ew", padx=8, pady=(8, 16))
 
-        ctk.CTkButton(
+        create_cat_button(
             export_frame,
-            text="\U0001f4c4 Export PDF Report",
-            fg_color=ACCENT2,
-            hover_color=BTN_END[1],
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
-            height=40,
-            corner_radius=BTN_RADIUS,
+            "\U0001f4c4 Export PDF Report",
+            BTN_EXPORT_PDF[0],
+            BTN_EXPORT_PDF[1],
             command=self._export_pdf,
-        ).pack(side="left", padx=(0, 8))
-
-        ctk.CTkButton(
-            export_frame,
-            text="\U0001f4ca Export Excel Report",
-            fg_color=ACCENT3,
-            hover_color="#9B1B5E",
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
             height=40,
-            corner_radius=BTN_RADIUS,
+            font_size=12,
+            pack_kwargs={"side": "left", "padx": (0, 8)},
+        )
+
+        create_cat_button(
+            export_frame,
+            "\U0001f4ca Export Excel Report",
+            BTN_EXPORT_XLS[0],
+            BTN_EXPORT_XLS[1],
             command=self._export_excel,
-        ).pack(side="left")
-
-        ctk.CTkButton(
-            export_frame,
-            text="\U0001f4dd Open in New Window",
-            fg_color=SURFACE,
-            hover_color=CARD_BORDER,
-            text_color=TEXT_PRIMARY,
-            font=ctk.CTkFont(family="Segoe UI", size=12),
             height=40,
-            corner_radius=BTN_RADIUS,
+            font_size=12,
+            pack_kwargs={"side": "left"},
+        )
+
+        create_cat_button(
+            export_frame,
+            "\U0001f4dd Open in New Window",
+            BTN_SECONDARY[0],
+            BTN_SECONDARY[1],
             command=self._open_analytics_window,
-        ).pack(side="right")
+            text_color=TEXT_PRIMARY,
+            height=40,
+            font_size=12,
+            bold=False,
+            pack_kwargs={"side": "right"},
+        )
 
         threading.Thread(target=self._load_analytics_charts, daemon=True).start()
 

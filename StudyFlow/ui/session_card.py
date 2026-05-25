@@ -33,11 +33,11 @@ class SessionCard(ctk.CTkFrame):
 
         badge = ctk.CTkLabel(
             header,
-            text=f"  Session {index}  ",
+            text=f"  \U0001f431 Session {index}  ",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             fg_color=ACCENT1,
             text_color="#FFFFFF",
-            corner_radius=6,
+            corner_radius=BTN_RADIUS,
         )
         badge.pack(side="left", padx=(0, 12))
 
